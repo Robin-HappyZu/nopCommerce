@@ -12,7 +12,7 @@ namespace Nop.Plugin.ExternalAuth.WeiXin.AspNet
     public class WeiXinClient : OAuth2Client
     {
         private const string AuthorizationEndpoint = "";
-        private const string TokenEndpoint = "";
+        private const string TokenEndpoint = "https://api.weixin.qq.com/sns/oauth2/access_token";
         private readonly string _appId;
         private readonly string _appSecret;
         private readonly string _returnUrl;
@@ -154,18 +154,13 @@ namespace Nop.Plugin.ExternalAuth.WeiXin.AspNet
                 },
 
                 {
-                    "client_id",
+                    "appid",
                     _appId
                 },
 
                 {
-                    "client_secret",
+                    "secret",
                     _appSecret
-                },
-
-                {
-                    "redirect_uri",
-                    uri
                 }
             });
             string result;

@@ -1,9 +1,14 @@
-﻿using System.Web.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web.Mvc;
 using Nop.Core;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Plugins;
-using Nop.Plugin.ExternalAuth.WeiXin.Core;
-using Nop.Plugin.ExternalAuth.WeiXin.Models;
+using Nop.Plugin.ExternalAuth.WeixinConnect.Core;
+using Nop.Plugin.ExternalAuth.WeixinConnect.Models;
 using Nop.Services.Authentication.External;
 using Nop.Services.Configuration;
 using Nop.Services.Localization;
@@ -12,13 +17,13 @@ using Nop.Services.Stores;
 using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
 
-namespace Nop.Plugin.ExternalAuth.WeiXin.Controllers
+namespace Nop.Plugin.ExternalAuth.WeixinConnect.Controllers
 {
-    public class ExternalAuthWeiXinController : BasePluginController
+    public class ExternalAuthWeixinConnectController : BasePluginController
     {
         private readonly ExternalAuthenticationSettings _externalAuthenticationSettings;
         private readonly ILocalizationService _localizationService;
-        private readonly IOAuthProviderWeiXinAuthorizer _oAuthProviderWeiXinAuthorizer;
+        private readonly IOAuthProviderWeixinConnectAuthorizer _oAuthProviderWeixinConnectAuthorizer;
         private readonly IOpenAuthenticationService _openAuthenticationService;
         private readonly IPermissionService _permissionService;
         private readonly IPluginFinder _pluginFinder;
@@ -27,8 +32,8 @@ namespace Nop.Plugin.ExternalAuth.WeiXin.Controllers
         private readonly IStoreService _storeService;
         private readonly IWorkContext _workContext;
 
-        public ExternalAuthWeiXinController(ISettingService settingService,
-            IOAuthProviderWeiXinAuthorizer oAuthProviderWeiXinAuthorizer,
+        public ExternalAuthWeixinConnectController(ISettingService settingService,
+            IOAuthProviderWeixinConnectAuthorizer oAuthProviderWeixinConnectAuthorizer,
             IOpenAuthenticationService openAuthenticationService,
             ExternalAuthenticationSettings externalAuthenticationSettings,
             IPermissionService permissionService,
@@ -39,7 +44,7 @@ namespace Nop.Plugin.ExternalAuth.WeiXin.Controllers
             ILocalizationService localizationService)
         {
             _settingService = settingService;
-            _oAuthProviderWeiXinAuthorizer = oAuthProviderWeiXinAuthorizer;
+            _oAuthProviderWeixinConnectAuthorizer = oAuthProviderWeixinConnectAuthorizer;
             _openAuthenticationService = openAuthenticationService;
             _externalAuthenticationSettings = externalAuthenticationSettings;
             _permissionService = permissionService;
@@ -59,7 +64,7 @@ namespace Nop.Plugin.ExternalAuth.WeiXin.Controllers
 
             //load settings for a chosen store scope
             var storeScope = GetActiveStoreScopeConfiguration(_storeService, _workContext);
-            var weiXinExternalAuthSettings = _settingService.LoadSetting<WeiXinExternalAuthSettings>(storeScope);
+            var weiXinExternalAuthSettings = _settingService.LoadSetting<WeixinConnectExternalAuthSettings>(storeScope);
 
             var model = new ConfigurationModel();
             model.ClientKeyIdentifier = weiXinExternalAuthSettings.ClientKeyIdentifier;
@@ -74,7 +79,7 @@ namespace Nop.Plugin.ExternalAuth.WeiXin.Controllers
                     x => x.ClientSecret, storeScope);
             }
 
-            return View("~/Plugins/ExternalAuth.WeiXin/Views/ExternalAuthWeiXin/Configure.cshtml", model);
+            return View("~/Plugins/ExternalAuth.WeixinConnect/Views/ExternalAuthWeixinConnect/Configure.cshtml", model);
         }
 
         [HttpPost]
@@ -90,7 +95,7 @@ namespace Nop.Plugin.ExternalAuth.WeiXin.Controllers
 
             //load settings for a chosen store scope
             var storeScope = GetActiveStoreScopeConfiguration(_storeService, _workContext);
-            var weiXinExternalAuthSettings = _settingService.LoadSetting<WeiXinExternalAuthSettings>(storeScope);
+            var weiXinExternalAuthSettings = _settingService.LoadSetting<WeixinConnectExternalAuthSettings>(storeScope);
 
             //save settings
             weiXinExternalAuthSettings.ClientKeyIdentifier = model.ClientKeyIdentifier;
@@ -115,7 +120,7 @@ namespace Nop.Plugin.ExternalAuth.WeiXin.Controllers
         [ChildActionOnly]
         public ActionResult PublicInfo()
         {
-            return View("~/Plugins/ExternalAuth.WeiXin/Views/ExternalAuthWeiXin/PublicInfo.cshtml");
+            return View("~/Plugins/ExternalAuth.WeixinConnect/Views/ExternalAuthWeixinConnect/PublicInfo.cshtml");
         }
 
         [NonAction]
@@ -126,39 +131,39 @@ namespace Nop.Plugin.ExternalAuth.WeiXin.Controllers
                 !processor.IsMethodActive(_externalAuthenticationSettings) ||
                 !processor.PluginDescriptor.Installed ||
                 !_pluginFinder.AuthenticateStore(processor.PluginDescriptor, _storeContext.CurrentStore.Id))
-                throw new NopException("WeiXin Auth module cannot be loaded");
+                throw new NopException("WeixinConnect Auth module cannot be loaded");
 
             var viewModel = new LoginModel();
             TryUpdateModel(viewModel);
 
-            var result = _oAuthProviderWeiXinAuthorizer.Authorize(returnUrl, verifyResponse);
+            var result = _oAuthProviderWeixinConnectAuthorizer.Authorize(returnUrl, verifyResponse);
             switch (result.AuthenticationStatus)
             {
                 case OpenAuthenticationStatus.Error:
-                {
-                    if (!result.Success)
-                        foreach (var error in result.Errors)
-                            ExternalAuthorizerHelper.AddErrorsToDisplay(error);
+                    {
+                        if (!result.Success)
+                            foreach (var error in result.Errors)
+                                ExternalAuthorizerHelper.AddErrorsToDisplay(error);
 
-                    return new RedirectResult(Url.LogOn(returnUrl));
-                }
+                        return new RedirectResult(Url.LogOn(returnUrl));
+                    }
                 case OpenAuthenticationStatus.AssociateOnLogon:
-                {
-                    return new RedirectResult(Url.LogOn(returnUrl));
-                }
+                    {
+                        return new RedirectResult(Url.LogOn(returnUrl));
+                    }
                 case OpenAuthenticationStatus.AutoRegisteredEmailValidation:
-                {
-                    //result
-                    return RedirectToRoute("RegisterResult", new {resultId = (int) UserRegistrationType.EmailValidation});
-                }
+                    {
+                        //result
+                        return RedirectToRoute("RegisterResult", new { resultId = (int)UserRegistrationType.EmailValidation });
+                    }
                 case OpenAuthenticationStatus.AutoRegisteredAdminApproval:
-                {
-                    return RedirectToRoute("RegisterResult", new {resultId = (int) UserRegistrationType.AdminApproval});
-                }
+                    {
+                        return RedirectToRoute("RegisterResult", new { resultId = (int)UserRegistrationType.AdminApproval });
+                    }
                 case OpenAuthenticationStatus.AutoRegisteredStandard:
-                {
-                    return RedirectToRoute("RegisterResult", new {resultId = (int) UserRegistrationType.Standard});
-                }
+                    {
+                        return RedirectToRoute("RegisterResult", new { resultId = (int)UserRegistrationType.Standard });
+                    }
                 default:
                     break;
             }

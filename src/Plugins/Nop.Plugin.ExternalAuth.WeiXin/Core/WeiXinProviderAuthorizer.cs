@@ -93,21 +93,23 @@ namespace Nop.Plugin.ExternalAuth.WeiXin.Core
         private Uri GenerateLocalCallbackUri()
         {
             string url = string.Format("{0}plugins/externalauthWeiXin/logincallback/", _webHelper.GetStoreLocation());
+            url = url.Replace("localhost", "www.hqcang.com");
+            url = url.Replace("127.0.0.1", "www.hqcang.com");
             return new Uri(url);
         }
 
         private Uri GenerateServiceLoginUrl()
         {
-            var builder = new UriBuilder("https://open.weixin.qq.com/connect/oauth2/authorize");
+            var builder = new UriBuilder("https://open.weixin.qq.com/connect/qrconnect");
             var args = new Dictionary<string, string>();
             // appid
             args.Add("appid", _weiXinExternalAuthSettings.ClientKeyIdentifier);
             // 回调uri
-            args.Add("redirect_uri", HttpUtility.UrlEncode(GenerateLocalCallbackUri().AbsoluteUri));
+            args.Add("redirect_uri", GenerateLocalCallbackUri().AbsoluteUri);
             // 返回类型
             args.Add("response_type", "code");
             // 授权作用域
-            args.Add("scope", "snsapi_base");
+            args.Add("scope", "snsapi_login");
             AppendQueryArgs(builder, args);
             return builder.Uri;
         }
