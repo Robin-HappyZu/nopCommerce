@@ -1,0 +1,19 @@
+﻿@model IList<ProductOverviewModel>
+
+@using Nop.Web.Models.Catalog;
+@if (Model.Count > 0)
+{
+    <div class="product-grid bestsellers">
+        <div class="title">
+            <strong>人气爆款</strong><span>100%低价 100%信赖 100%正品</span>
+        </div>
+        <div class="item-grid">
+            @foreach (var item in Model)
+            {
+                <div class="item-box">
+                    @Html.Partial("_ProductBox", item)
+                </div>
+            }
+        </div>
+    </div>
+}

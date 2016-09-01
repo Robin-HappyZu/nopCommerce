@@ -1,0 +1,41 @@
+﻿<div class="top-bar">
+    <div class="header">
+        @Html.Widget("header")
+        <div class="header-upper">
+            <div class="header-selectors-wrapper">
+                @Html.Action("TaxTypeSelector", "Common")
+                @Html.Action("CurrencySelector", "Common")
+                @Html.Action("LanguageSelector", "Common")
+                @Html.Widget("header_selectors")
+            </div>
+            <div class="header-links-wrapper">
+                @Html.Action("HeaderLinks", "Common")
+            </div>
+        </div>
+    </div>
+</div>
+<div class="header-bar">
+    <div class="header">
+        <div class="header-lower">
+            <div class="header-logo">
+                @Html.Action("Logo", "Common")
+            </div>
+            <div class="search-box store-search-box">
+                <div class="search-box-1">
+                   @Html.Action("SearchBox", "Catalog") 
+                </div>
+            </div>
+            <div class="header-shopping-cart">
+                <div id="topcartlink" style="display: none;" class="top-cart-link">
+                    <a href="@Url.RouteUrl("ShoppingCart")" class="ico-cart">
+                        <i class="iconfont">&#xe604;</i>
+                        <span class="cart-label">@T("ShoppingCart")</span>
+                        <span class="cart-qty">0</span>
+                        <i class="iconfont icon-right">&#xe603;</i>
+                    </a>
+                </div>
+                @Html.Action("FlyoutShoppingCart", "ShoppingCart")
+            </div>
+        </div>
+    </div>
+</div>
