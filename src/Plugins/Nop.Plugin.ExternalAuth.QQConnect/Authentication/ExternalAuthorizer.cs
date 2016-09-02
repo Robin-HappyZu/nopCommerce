@@ -102,7 +102,7 @@ namespace Nop.Plugin.ExternalAuth.QQConnect.Authentication
                 var details = new Nop.Plugin.ExternalAuth.QQConnect.Authentication.External.RegistrationDetails(parameters);
                 var randomPassword = CommonHelper.GenerateRandomDigitCode(20);
 
-                var registrationRequest = new CustomerRegistrationRequest(currentCustomer, string.Empty, details.UserName, randomPassword, PasswordFormat.Clear, true);
+                var registrationRequest = new CustomerRegistrationRequest(currentCustomer, string.Empty, details.UserName, randomPassword, PasswordFormat.Clear, 0, true);
 
                 var registrationResult = _customerRegistrationService.RegisterCustomer(registrationRequest);
                 if (registrationResult.Success)

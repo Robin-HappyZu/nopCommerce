@@ -1,4 +1,5 @@
 using Autofac;
+using Nop.Core.Configuration;
 using Nop.Core.Infrastructure;
 using Nop.Core.Infrastructure.DependencyManagement;
 using Nop.Plugin.ExternalAuth.QQConnect.Core;
@@ -11,7 +12,7 @@ namespace Nop.Plugin.ExternalAuth.QQConnect
 {
     public class DependencyRegistrar : IDependencyRegistrar
     {
-        public virtual void Register(ContainerBuilder builder, ITypeFinder typeFinder)
+        public virtual void Register(ContainerBuilder builder, ITypeFinder typeFinde, NopConfig configr)
         {
             builder.RegisterType<QQConnectProviderAuthorizer>().As<IOAuthProviderQQConnectAuthorizer>().InstancePerLifetimeScope();
 

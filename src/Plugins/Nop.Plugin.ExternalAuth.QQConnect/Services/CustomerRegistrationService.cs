@@ -46,7 +46,7 @@ namespace Nop.Plugin.ExternalAuth.QQConnect.Services
             IStoreService storeService,
             RewardPointsSettings rewardPointsSettings,
             CustomerSettings customerSettings)
-            : base(customerService, encryptionService, newsLetterSubscriptionService, localizationService, storeService, rewardPointsSettings, customerSettings)
+            : base(customerService, encryptionService, newsLetterSubscriptionService, localizationService, storeService, null, rewardPointsSettings, customerSettings)
         {
             this._customerService = customerService;
             this._encryptionService = encryptionService;
@@ -150,9 +150,9 @@ namespace Nop.Plugin.ExternalAuth.QQConnect.Services
                 request.Customer.CustomerRoles.Remove(guestRole);
 
             //Add reward points for customer registration (if enabled)
-            if (_rewardPointsSettings.Enabled &&
-                _rewardPointsSettings.PointsForRegistration > 0)
-                request.Customer.AddRewardPointsHistoryEntry(_rewardPointsSettings.PointsForRegistration, _localizationService.GetResource("RewardPoints.Message.EarnedForRegistration"));
+            //if (_rewardPointsSettings.Enabled &&
+            //    _rewardPointsSettings.PointsForRegistration > 0)
+            //    request.Customer.AddRewardPointsHistoryEntry(_rewardPointsSettings.PointsForRegistration, _localizationService.GetResource("RewardPoints.Message.EarnedForRegistration"));
 
             _customerService.UpdateCustomer(request.Customer);
             return result;
