@@ -109,7 +109,7 @@ namespace Nop.Plugin.ExternalAuth.WeixinConnect.Core
         public AuthorizeState Authorize(string returnUrl, bool? verifyResponse = null)
         {
             if (!verifyResponse.HasValue)
-                throw new ArgumentException("Facebook plugin cannot automatically determine verifyResponse property");
+                throw new ArgumentException("WeixinConnect plugin cannot automatically determine verifyResponse property");
 
             if (verifyResponse.Value)
                 return VerifyAuthentication(returnUrl);
