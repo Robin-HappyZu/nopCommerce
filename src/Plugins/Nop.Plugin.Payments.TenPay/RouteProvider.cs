@@ -18,14 +18,14 @@ namespace Nop.Plugin.Payments.TenPay
             //JsPay
             routes.MapRoute("Plugin.Payments.TenPay.JsPay",
                  "Plugins/PaymentTenPay/JsPay",
-                 new { controller = "PaymentTenPay", action = "JsPay" },
+                 new { controller = "PaymentTenPay", action = "JsApi" },
                  new[] { "Nop.Plugin.Payments.TenPay.Controllers" }
             );
 
             //Native 扫码支付
-            routes.MapRoute("Plugin.Payments.TenPay.NativePay",
-               "Plugins/PaymentTenPay/NativePay",
-               new { controller = "PaymentTenPay", action = "NativePay" },
+            routes.MapRoute("Plugin.Payments.TenPay.Native",
+               "Plugins/PaymentTenPay/Native",
+               new { controller = "PaymentTenPay", action = "Native" },
                  new[] { "Nop.Plugin.Payments.TenPay.Controllers" }
             );
         }

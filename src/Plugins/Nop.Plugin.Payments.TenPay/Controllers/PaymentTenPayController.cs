@@ -1,17 +1,26 @@
-﻿using Nop.Core.Domain.Payments;
+﻿using Nop.Core;
+using Nop.Core.Domain.Payments;
 using Nop.Plugin.Payments.TenPay.Models;
+using Nop.Services.Catalog;
 using Nop.Services.Configuration;
+using Nop.Services.Directory;
 using Nop.Services.Localization;
 using Nop.Services.Logging;
 using Nop.Services.Orders;
 using Nop.Services.Payments;
 using Nop.Web.Framework.Controllers;
+using Senparc.Weixin.MP;
+using Senparc.Weixin.MP.AdvancedAPIs;
+using Senparc.Weixin.MP.TenPayLibV3;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web.Mvc;
+using System.Xml.Linq;
+using ZXing;
+using ZXing.Common;
 
 namespace Nop.Plugin.Payments.TenPay.Controllers
 {
@@ -28,6 +37,11 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
         private readonly ILocalizationService _localizationService;
         private readonly TenPayPaymentSettings _tenPayPaymentSettings;
         private readonly PaymentSettings _paymentSettings;
+        private readonly IWebHelper _webHelper;
+        private readonly IStoreContext _storeContext;
+        private readonly IPriceFormatter _priceFormatter;
+        private readonly ICurrencyService _currencyService;
+        private readonly IWorkContext _workContext;
 
         #endregion
 
@@ -41,7 +55,12 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
             ILogger logger,
             ILocalizationService localizationService,
             TenPayPaymentSettings tenPayPaymentSettings,
-            PaymentSettings paymentSettings)
+            PaymentSettings paymentSettings,
+            IWebHelper webHelper,
+            IStoreContext storeContext,
+            IPriceFormatter priceFormatter,
+            ICurrencyService currencyService,
+            IWorkContext workContext)
         {
             _settingService = settingService;
             _paymentService = paymentService;
@@ -51,6 +70,11 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
             _localizationService = localizationService;
             _tenPayPaymentSettings = tenPayPaymentSettings;
             _paymentSettings = paymentSettings;
+            _webHelper = webHelper;
+            _storeContext = storeContext;
+            _priceFormatter = priceFormatter;
+            _currencyService = currencyService;
+            _workContext = workContext;
         }
 
         #endregion
@@ -63,7 +87,11 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
         {
             var model = new ConfigurationModel
             {
-
+                AppId = _tenPayPaymentSettings.AppId,
+                MchId = _tenPayPaymentSettings.MchId,
+                Key = _tenPayPaymentSettings.Key,
+                AppSecret = _tenPayPaymentSettings.AppSecret,
+                AdditionalFee = _tenPayPaymentSettings.AdditionalFee
             };
 
             return View("~/Plugins/Payments.TenPay/Views/PaymentTenPay/Configure.cshtml", model);
@@ -78,11 +106,11 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
                 return Configure();
 
             //save settings
-            //_aliPayPaymentSettings.SellerEmail = model.SellerEmail;
-            //_aliPayPaymentSettings.Key = model.Key;
-            //_aliPayPaymentSettings.Partner = model.Partner;
-            //_aliPayPaymentSettings.AdditionalFee = model.AdditionalFee;
-
+            _tenPayPaymentSettings.AppId = model.AppId;
+            _tenPayPaymentSettings.MchId = model.MchId;
+            _tenPayPaymentSettings.Key = model.Key;
+            _tenPayPaymentSettings.AppSecret = model.AppSecret;
+            _tenPayPaymentSettings.AdditionalFee = model.AdditionalFee;
             _settingService.SaveSetting(_tenPayPaymentSettings);
 
             SuccessNotification(_localizationService.GetResource("Admin.Plugins.Saved"));
@@ -112,6 +140,115 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
             return paymentInfo;
         }
 
+        /// <summary>
+        /// 原生支付 模式二
+        /// 根据统一订单返回的code_url生成支付二维码。该模式链接较短，生成的二维码打印到结账小票上的识别率较高。
+        /// 注意：code_url有效期为2小时，过期后扫码不能再发起支付
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public ActionResult Native(FormCollection form)
+        {
+            var processor = _paymentService.LoadPaymentMethodBySystemName("Payments.TenPay") as TenPayPaymentProcessor;
+
+            if (processor == null
+                || !processor.IsPaymentMethodActive(_paymentSettings)
+                || !processor.PluginDescriptor.Installed)
+                throw new NopException("TenPay module cannot be loaded");
+
+            //获取请求参数
+            string orderGuid = Request.Form["OrderGuid"] == null ? string.Empty : Request.Form["OrderGuid"].ToString();
+            if (string.IsNullOrWhiteSpace(orderGuid))
+                throw new Exception("OrderGuid is not set");
+            var order = _orderService.GetOrderByGuid(Guid.Parse(orderGuid));
+
+            //创建支付应答对象
+            RequestHandler packageReqHandler = new RequestHandler(null);
+
+            var notifyUrl = _webHelper.GetStoreLocation(false) + "Plugins/PaymentTenPay/Notify";
+            var nonceStr = TenPayV3Util.GetNoncestr();
+
+            //创建请求统一订单接口参数
+            packageReqHandler.SetParameter("appid", _tenPayPaymentSettings.AppId);
+            packageReqHandler.SetParameter("mch_id", _tenPayPaymentSettings.MchId);
+            packageReqHandler.SetParameter("nonce_str", nonceStr);
+            packageReqHandler.SetParameter("body", "订单来自 " + _storeContext.CurrentStore.Name);
+            packageReqHandler.SetParameter("out_trade_no", order.Id.ToString());
+            packageReqHandler.SetParameter("total_fee", Convert.ToInt32(order.OrderTotal * 100).ToString());
+            packageReqHandler.SetParameter("spbill_create_ip", Request.UserHostAddress);
+            packageReqHandler.SetParameter("notify_url", notifyUrl);
+            packageReqHandler.SetParameter("trade_type", TenPayV3Type.NATIVE.ToString());
+
+            string sign = packageReqHandler.CreateMd5Sign("key", _tenPayPaymentSettings.Key);
+            packageReqHandler.SetParameter("sign", sign);
+
+            string data = packageReqHandler.ParseXML();
+
+            //调用统一订单接口
+            var result = TenPayV3.Unifiedorder(data);
+            var unifiedorderRes = XDocument.Parse(result);
+            string codeUrl = unifiedorderRes.Element("xml").Element("code_url").Value;
+
+            BitMatrix bitMatrix;
+            bitMatrix = new MultiFormatWriter().encode(codeUrl, BarcodeFormat.QR_CODE, 600, 600);
+            BarcodeWriter bw = new BarcodeWriter();
+
+            var ms = new MemoryStream();
+            var bitmap = bw.Write(bitMatrix);
+            bitmap.Save(ms, ImageFormat.Png);
+            //return File(ms, "image/png");
+            //ms.WriteTo(Response.OutputStream);
+            //Response.ContentType = "image/png";
+            //return null;
+
+            var orderTotalInCustomerCurrency = _currencyService.ConvertCurrency(order.OrderTotal, order.CurrencyRate);
+            var orderTotal = _priceFormatter.FormatPrice(orderTotalInCustomerCurrency, true, order.CustomerCurrencyCode, false, _workContext.WorkingLanguage);
+
+            var model = new NativePayModel
+            {
+                OrderTotal = orderTotal,
+                QrCodeBase64String = Convert.ToBase64String(ms.GetBuffer())
+            };
+            return View("~/Plugins/Payments.TenPay/Views/PaymentTenPay/Native.cshtml", model);
+        }
+
+        public ActionResult Notify()
+        {
+            ResponseHandler resHandler = new ResponseHandler(null);
+
+            string return_code = resHandler.GetParameter("return_code");
+            string return_msg = resHandler.GetParameter("return_msg");
+
+            string res = null;
+
+            resHandler.SetKey(_tenPayPaymentSettings.Key);
+            //验证请求是否从微信发过来（安全）
+            if (resHandler.IsTenpaySign())
+            {
+                res = "success";
+
+                //正确的订单处理
+            }
+            else
+            {
+                res = "wrong";
+
+                //错误的订单处理
+            }
+
+            var fileStream = System.IO.File.OpenWrite(Server.MapPath("~/1.txt"));
+            fileStream.Write(Encoding.Default.GetBytes(res), 0, Encoding.Default.GetByteCount(res));
+            fileStream.Close();
+
+            string xml = string.Format(@"<xml>
+                                           <return_code><![CDATA[{0}]]></return_code>
+                                           <return_msg><![CDATA[{1}]]></return_msg>
+                                        </xml>", return_code, return_msg);
+
+            return Content(xml, "text/xml");
+        }
+
+        #region 其它支付模式(暂未实现)
         //public ActionResult JsApi(string code, string state)
         //{
         //    if (string.IsNullOrEmpty(code))
@@ -322,58 +459,6 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
         //}
 
         ///// <summary>
-        ///// 原生支付 模式二
-        ///// 根据统一订单返回的code_url生成支付二维码。该模式链接较短，生成的二维码打印到结账小票上的识别率较高。
-        ///// 注意：code_url有效期为2小时，过期后扫码不能再发起支付
-        ///// </summary>
-        ///// <returns></returns>
-        //public ActionResult NativeByCodeUrl()
-        //{
-        //    //创建支付应答对象
-        //    RequestHandler packageReqHandler = new RequestHandler(null);
-
-        //    var sp_billno = DateTime.Now.ToString("HHmmss") + TenPayV3Util.BuildRandomStr(28);
-        //    var nonceStr = TenPayV3Util.GetNoncestr();
-
-        //    //商品Id，用户自行定义
-        //    string productId = DateTime.Now.ToString("yyyyMMddHHmmss");
-
-        //    //创建请求统一订单接口参数
-        //    packageReqHandler.SetParameter("appid", TenPayV3Info.AppId);
-        //    packageReqHandler.SetParameter("mch_id", TenPayV3Info.MchId);
-        //    packageReqHandler.SetParameter("nonce_str", nonceStr);
-        //    packageReqHandler.SetParameter("body", "test");
-        //    packageReqHandler.SetParameter("out_trade_no", sp_billno);
-        //    packageReqHandler.SetParameter("total_fee", "1");
-        //    packageReqHandler.SetParameter("spbill_create_ip", Request.UserHostAddress);
-        //    packageReqHandler.SetParameter("notify_url", TenPayV3Info.TenPayV3Notify);
-        //    packageReqHandler.SetParameter("trade_type", TenPayV3Type.NATIVE.ToString());
-        //    packageReqHandler.SetParameter("product_id", productId);
-
-        //    string sign = packageReqHandler.CreateMd5Sign("key", TenPayV3Info.Key);
-        //    packageReqHandler.SetParameter("sign", sign);
-
-        //    string data = packageReqHandler.ParseXML();
-
-        //    //调用统一订单接口
-        //    var result = TenPayV3.Unifiedorder(data);
-        //    var unifiedorderRes = XDocument.Parse(result);
-        //    string codeUrl = unifiedorderRes.Element("xml").Element("code_url").Value;
-
-        //    BitMatrix bitMatrix;
-        //    bitMatrix = new MultiFormatWriter().encode(codeUrl, BarcodeFormat.QR_CODE, 600, 600);
-        //    BarcodeWriter bw = new BarcodeWriter();
-
-        //    var ms = new MemoryStream();
-        //    var bitmap = bw.Write(bitMatrix);
-        //    bitmap.Save(ms, ImageFormat.Png);
-        //    //return File(ms, "image/png");
-        //    ms.WriteTo(Response.OutputStream);
-        //    Response.ContentType = "image/png";
-        //    return null;
-        //}
-
-        ///// <summary>
         ///// 刷卡支付
         ///// </summary>
         ///// <param name="authCode">扫码设备获取到的微信用户刷卡授权码</param>
@@ -403,42 +488,7 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
 
         //    return Content(result);
         //}
-
-        //public ActionResult PayNotifyUrl()
-        //{
-        //    ResponseHandler resHandler = new ResponseHandler(null);
-
-        //    string return_code = resHandler.GetParameter("return_code");
-        //    string return_msg = resHandler.GetParameter("return_msg");
-
-        //    string res = null;
-
-        //    resHandler.SetKey(TenPayV3Info.Key);
-        //    //验证请求是否从微信发过来（安全）
-        //    if (resHandler.IsTenpaySign())
-        //    {
-        //        res = "success";
-
-        //        //正确的订单处理
-        //    }
-        //    else
-        //    {
-        //        res = "wrong";
-
-        //        //错误的订单处理
-        //    }
-
-        //    var fileStream = System.IO.File.OpenWrite(Server.MapPath("~/1.txt"));
-        //    fileStream.Write(Encoding.Default.GetBytes(res), 0, Encoding.Default.GetByteCount(res));
-        //    fileStream.Close();
-
-        //    string xml = string.Format(@"<xml>
-        //                                   <return_code><![CDATA[{0}]]></return_code>
-        //                                   <return_msg><![CDATA[{1}]]></return_msg>
-        //                                </xml>", return_code, return_msg);
-
-        //    return Content(xml, "text/xml");
-        //}
+        #endregion
 
         #endregion
     }
