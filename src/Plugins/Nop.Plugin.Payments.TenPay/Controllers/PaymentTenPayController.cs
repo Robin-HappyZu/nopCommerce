@@ -237,7 +237,6 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
             ResponseHandler resHandler = new ResponseHandler(null);
             string returnCode = resHandler.GetParameter("return_code");
             string returnMsg = resHandler.GetParameter("return_msg");
-            string resultCode = resHandler.GetParameter("result_code");
             resHandler.SetKey(_tenPayPaymentSettings.Key);
 
             string xml = @"<xml>
@@ -254,9 +253,17 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
             }
 
             //验证支付状态
-            if (!returnCode.Equals("SUCCESS") || !resultCode.Equals("SUCCESS"))
+            if (!returnCode.Equals("SUCCESS"))
             {
-                _logger.Error(String.Format("支付通知错误，ReturnCode:{0},ReturnMsg:{1},ResultCode:{2}", returnCode, returnMsg,resultCode));
+                _logger.Error(String.Format("支付通知错误，ReturnCode:{0},ReturnMsg:{1}", returnCode, returnMsg));
+
+                xml = String.Format(xml, "FAIL", "支付状态错误");
+                return Content(xml, "text/xml");
+            }
+            string resultCode = resHandler.GetParameter("result_code");
+            if (!resultCode.Equals("SUCCESS"))
+            {
+                _logger.Error(String.Format("支付通知错误，ReturnCode:{0},ReturnMsg:{1},ResultCode:{2}", returnCode, returnMsg, resultCode));
 
                 xml = String.Format(xml, "FAIL", "支付状态错误");
                 return Content(xml, "text/xml");
