@@ -1,0 +1,8 @@
+﻿@using Nop.Web.Framework.UI
+@{
+    Layout = "";
+
+    Html.AddCssFileParts("~/Plugins/ExternalAuth.WeixinConnect/Content/wxconnectstyles.css");
+}
+<a href="@Url.RouteUrl("Plugin.ExternalAuth.WeixinConnect.Login", new { ReturnUrl = HttpContext.Current.Request.QueryString["ReturnUrl"] })" class="wxconnect-btn">
+</a>

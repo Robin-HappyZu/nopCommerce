@@ -1,0 +1,38 @@
+﻿@{
+    Layout = "";
+}
+@model Nop.Plugin.ExternalAuth.QQConnect.Models.ConfigurationModel
+@using Nop.Web.Framework;
+@Html.Action("StoreScopeConfiguration", "Setting", new { area = "Admin" })
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <table class="adminContent">
+        <tr>
+            <td class="adminTitle">
+                @Html.OverrideStoreCheckboxFor(model => model.AppId_OverrideForStore, model => model.AppId, Model.ActiveStoreScopeConfiguration)
+                @Html.NopLabelFor(model => model.AppId):
+            </td>
+            <td class="adminData">
+                @Html.EditorFor(model => model.AppId)
+                @Html.ValidationMessageFor(model => model.AppId)
+            </td>
+        </tr>
+        <tr>
+            <td class="adminTitle">
+                @Html.OverrideStoreCheckboxFor(model => model.AppKey_OverrideForStore, model => model.AppKey, Model.ActiveStoreScopeConfiguration)
+                @Html.NopLabelFor(model => model.AppKey):
+            </td>
+            <td class="adminData">
+                @Html.EditorFor(model => model.AppKey)
+                @Html.ValidationMessageFor(model => model.AppKey)
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type="submit" name="save" class="k-button" value="@T("Admin.Common.Save")" />
+            </td>
+        </tr>
+    </table>
+}
+  
