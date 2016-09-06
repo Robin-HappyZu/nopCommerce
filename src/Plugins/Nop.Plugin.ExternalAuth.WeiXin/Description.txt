@@ -1,9 +1,0 @@
-﻿Group: ExternalAuth methods
-FriendlyName: WeiXin authentication
-SystemName: ExternalAuth.WeiXin
-Version: 1.00
-SupportedVersions: 3.80
-Author: timfun81@gmail.com
-DisplayOrder: 5
-FileName: Nop.Plugin.ExternalAuth.WeiXin.dll
-Description: This plugin enables Weixin authentication (login using WeiXin account)
