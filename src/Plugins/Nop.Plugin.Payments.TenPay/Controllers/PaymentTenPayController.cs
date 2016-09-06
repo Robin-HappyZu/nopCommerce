@@ -1,4 +1,5 @@
 ﻿using Nop.Core;
+using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Payments;
 using Nop.Plugin.Payments.TenPay.Models;
 using Nop.Services.Catalog;
@@ -19,6 +20,7 @@ using System.IO;
 using System.Text;
 using System.Web.Mvc;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using ZXing;
 using ZXing.Common;
 
@@ -186,65 +188,102 @@ namespace Nop.Plugin.Payments.TenPay.Controllers
 
             //调用统一订单接口
             var result = TenPayV3.Unifiedorder(data);
-            var unifiedorderRes = XDocument.Parse(result);
-            string codeUrl = unifiedorderRes.Element("xml").Element("code_url").Value;
+            var returnValue = XDocument.Parse(result);
+            var returnCode = returnValue.Element("xml").Element("return_code") == null ? string.Empty : returnValue.Element("xml").Element("return_code").Value;
+            var resultCode = returnValue.Element("xml").Element("result_code") == null ? string.Empty : returnValue.Element("xml").Element("result_code").Value;
+            var codeUrl = returnValue.Element("xml").Element("code_url") == null ? string.Empty : returnValue.Element("xml").Element("code_url").Value;
+            if (!returnCode.Equals("SUCCESS") || !resultCode.Equals("SUCCESS") || String.IsNullOrWhiteSpace(codeUrl))
+            {
+                _logger.Error(string.Format("支付错误,微信返回信息：{0}", result));
+                throw new NopException("支付错误");
+            }
 
+            //根据二维码链接生成二维码图片           
             BitMatrix bitMatrix;
             bitMatrix = new MultiFormatWriter().encode(codeUrl, BarcodeFormat.QR_CODE, 600, 600);
             BarcodeWriter bw = new BarcodeWriter();
-
             var ms = new MemoryStream();
             var bitmap = bw.Write(bitMatrix);
             bitmap.Save(ms, ImageFormat.Png);
-            //return File(ms, "image/png");
-            //ms.WriteTo(Response.OutputStream);
-            //Response.ContentType = "image/png";
-            //return null;
+            string codeImage = Convert.ToBase64String(ms.GetBuffer());
+            ms.Close();
 
+            //返回支付结果
             var orderTotalInCustomerCurrency = _currencyService.ConvertCurrency(order.OrderTotal, order.CurrencyRate);
             var orderTotal = _priceFormatter.FormatPrice(orderTotalInCustomerCurrency, true, order.CustomerCurrencyCode, false, _workContext.WorkingLanguage);
-
             var model = new NativePayModel
             {
                 OrderTotal = orderTotal,
-                QrCodeBase64String = Convert.ToBase64String(ms.GetBuffer())
+                QrCodeBase64String = codeImage
             };
             return View("~/Plugins/Payments.TenPay/Views/PaymentTenPay/Native.cshtml", model);
         }
 
+        /// <summary>
+        /// 支付通知
+        /// </summary>
+        /// <returns></returns>
         public ActionResult Notify()
         {
+            //检查微信支付模块是否可用
+            var processor = _paymentService.LoadPaymentMethodBySystemName("Payments.TenPay") as TenPayPaymentProcessor;
+
+            if (processor == null
+                || !processor.IsPaymentMethodActive(_paymentSettings)
+                || !processor.PluginDescriptor.Installed)
+                throw new NopException("TenPay module cannot be loaded");
+
+            //获取参数
             ResponseHandler resHandler = new ResponseHandler(null);
-
-            string return_code = resHandler.GetParameter("return_code");
-            string return_msg = resHandler.GetParameter("return_msg");
-
-            string res = null;
-
+            string returnCode = resHandler.GetParameter("return_code");
+            string returnMsg = resHandler.GetParameter("return_msg");
+            string resultCode = resHandler.GetParameter("result_code");
             resHandler.SetKey(_tenPayPaymentSettings.Key);
+
+            string xml = @"<xml>
+                            < return_code >< ![CDATA[{0}]]></ return_code >
+                            < return_msg >< ![CDATA[{1}]]></ return_msg >
+                           </ xml > ";
             //验证请求是否从微信发过来（安全）
-            if (resHandler.IsTenpaySign())
+            if (!resHandler.IsTenpaySign())
             {
-                res = "success";
+                _logger.Error(String.Format("支付通知错误，ReturnCode:{0},ReturnMsg:{1}", returnCode, returnMsg));
 
-                //正确的订单处理
-            }
-            else
-            {
-                res = "wrong";
-
-                //错误的订单处理
+                xml = String.Format(xml, "FAIL", "参数格式校验错误");
+                return Content(xml, "text/xml");
             }
 
-            var fileStream = System.IO.File.OpenWrite(Server.MapPath("~/1.txt"));
-            fileStream.Write(Encoding.Default.GetBytes(res), 0, Encoding.Default.GetByteCount(res));
-            fileStream.Close();
+            //验证支付状态
+            if (!returnCode.Equals("SUCCESS") || !resultCode.Equals("SUCCESS"))
+            {
+                _logger.Error(String.Format("支付通知错误，ReturnCode:{0},ReturnMsg:{1},ResultCode:{2}", returnCode, returnMsg,resultCode));
 
-            string xml = string.Format(@"<xml>
-                                           <return_code><![CDATA[{0}]]></return_code>
-                                           <return_msg><![CDATA[{1}]]></return_msg>
-                                        </xml>", return_code, return_msg);
+                xml = String.Format(xml, "FAIL", "支付状态错误");
+                return Content(xml, "text/xml");
+            }
 
+            //验证订单
+            int orderId = Convert.ToInt32(resHandler.GetParameter("out_trade_no"));
+            var order = _orderService.GetOrderById(orderId);
+            if (order == null)
+            {
+                xml = String.Format(xml, "FAIL", "订单查询失败");
+                return Content(xml, "text/xml");
+            }
+
+            //修改订单状态
+            if (_orderProcessingService.CanMarkOrderAsPaid(order))
+            {
+                string transactionId = resHandler.GetParameter("transaction_id");
+                order.OrderNotes.Add(new OrderNote()
+                {
+                    Note = "微信支付订单号：" + transactionId,
+                    DisplayToCustomer = true, //向客户展示微信支付的订单号
+                    CreatedOnUtc = DateTime.UtcNow
+                });
+                _orderProcessingService.MarkOrderAsPaid(order);
+            }
+            xml = String.Format(xml, "SUCCESS", "OK");
             return Content(xml, "text/xml");
         }
 
