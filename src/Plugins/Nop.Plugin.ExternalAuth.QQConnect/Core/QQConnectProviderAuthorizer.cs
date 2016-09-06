@@ -89,7 +89,6 @@ namespace Nop.Plugin.ExternalAuth.QQConnect.Core
                 return new AuthorizeState(returnUrl, result);
             }
 
-
             var state = new AuthorizeState(returnUrl, OpenAuthenticationStatus.Error);
             var error = authResult.Error != null ? authResult.Error.Message : "Unknown error";
             state.AddError(error);
@@ -101,9 +100,17 @@ namespace Nop.Plugin.ExternalAuth.QQConnect.Core
             //通过NameClaims对象存储QQ互联返回的用户昵称
             var claims = new UserClaims();
             claims.Name = new NameClaims();
-            if (authenticationResult.ExtraData.ContainsKey("nickname"))
-                claims.Name.Nickname = authenticationResult.ExtraData["nickname"];
+            claims.Contact = new ContactClaims();
+            if (authenticationResult.ExtraData.ContainsKey("id"))
+            {
+                claims.Contact.Email = "QQ" + authenticationResult.ExtraData["id"] + "@" + _webHelper.GetStoreLocation().ToLower().Replace("www.", "").Replace("http://", "").Replace("/", "");
+            }
 
+            if (authenticationResult.ExtraData.ContainsKey("nickname"))
+            {
+                claims.Name.Nickname = authenticationResult.ExtraData["nickname"];
+            }
+        
             parameters.AddClaim(claims);
         }
 
@@ -127,7 +134,7 @@ namespace Nop.Plugin.ExternalAuth.QQConnect.Core
             var args = new Dictionary<string, string>();
             args.Add("client_id", _conntectExternalAuthSettings.AppId);
             args.Add("response_type", "code");
-            args.Add("redirect_uri", GenerateLocalCallbackUri().AbsoluteUri);
+            args.Add("redirect_uri", GenerateLocalCallbackUri().AbsoluteUri.ToLower());
             args.Add("state", salt);
             args.Add("scope", "get_user_info");
             AppendQueryArgs(builder, args);

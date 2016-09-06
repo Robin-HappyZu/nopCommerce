@@ -15,10 +15,6 @@ namespace Nop.Plugin.ExternalAuth.QQConnect
         public virtual void Register(ContainerBuilder builder, ITypeFinder typeFinde, NopConfig configr)
         {
             builder.RegisterType<QQConnectProviderAuthorizer>().As<IOAuthProviderQQConnectAuthorizer>().InstancePerLifetimeScope();
-
-            builder.RegisterType<Nop.Plugin.ExternalAuth.QQConnect.Authentication.ExternalAuthorizer>().As<IExternalAuthorizer>().InstancePerLifetimeScope();
-            builder.RegisterType<Nop.Plugin.ExternalAuth.QQConnect.Services.CustomerRegistrationService>().As<ICustomerRegistrationService>().InstancePerLifetimeScope();
-            builder.RegisterType<Nop.Plugin.ExternalAuth.QQConnect.Authentication.External.OpenAuthenticationService>().As<IOpenAuthenticationService>().InstancePerLifetimeScope();
         }
 
         public int Order

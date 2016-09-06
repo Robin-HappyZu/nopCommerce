@@ -133,6 +133,12 @@
     <Compile Include="WeixinConnectExternalAuthSettings.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\wxconnectstyles.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\images\wxconnect_logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Description.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

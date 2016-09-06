@@ -115,9 +115,6 @@
     <Compile Include="AspNet\Client\UriHelper.cs" />
     <Compile Include="AspNet\DictionaryExtensions.cs" />
     <Compile Include="AspNet\Requires.cs" />
-    <Compile Include="Authentication\ExternalAuthorizer.cs" />
-    <Compile Include="Authentication\External\OpenAuthenticationService.cs" />
-    <Compile Include="Authentication\External\RegistrationDetails.cs" />
     <Compile Include="Controllers\ExternalAuthQQConnectController.cs" />
     <Compile Include="Core\IOAuthProviderQQConnectAuthorizer.cs" />
     <Compile Include="Core\OAuthAuthenticationParameters.cs" />
@@ -132,7 +129,6 @@
     <Compile Include="QQConnectExternalAuthMethod.cs" />
     <Compile Include="QQConnectExternalAuthSettings.cs" />
     <Compile Include="RouteProvider.cs" />
-    <Compile Include="Services\CustomerRegistrationService.cs" />
     <Compile Include="WebHelper.cs" />
   </ItemGroup>
   <ItemGroup>

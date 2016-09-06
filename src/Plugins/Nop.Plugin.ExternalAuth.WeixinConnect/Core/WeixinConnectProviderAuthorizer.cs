@@ -75,20 +75,24 @@ namespace Nop.Plugin.ExternalAuth.WeixinConnect.Core
         {
             var claims = new UserClaims();
             claims.Contact = new ContactClaims();
-            claims.Contact.Email = "6027356@qq.com";
             claims.Name = new NameClaims();
+
+            if (!string.IsNullOrEmpty(userInfo.openid))
+            {
+                claims.Contact.Email = "WX" + userInfo.openid + "@" + _webHelper.GetStoreLocation().ToLower().Replace("www.", "").Replace("http://", "").Replace("/", "");
+            }
+
             if (!string.IsNullOrEmpty(userInfo.nickname))
             {
                 claims.Name.Nickname = userInfo.nickname;
             }
+
             parameters.AddClaim(claims);
         }
 
         private Uri GenerateLocalCallbackUri()
         {
             string url = string.Format("{0}plugins/externalauthWeixinConnect/logincallback/", _webHelper.GetStoreLocation());
-            url = url.Replace("localhost", "www.hqcang.com");
-            url = url.Replace("127.0.0.1", "www.hqcang.com");
             return new Uri(url);
         }
 
