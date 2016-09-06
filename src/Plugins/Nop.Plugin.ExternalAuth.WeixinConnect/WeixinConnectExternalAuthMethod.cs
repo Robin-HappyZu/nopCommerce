@@ -80,7 +80,7 @@ namespace Nop.Plugin.ExternalAuth.WeiXin
 
             //locales
             this.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.WeixinConnect.Login", "微信网站扫码登陆");
-            this.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.WeixinConnect.ClientKeyIdentifier", "App ID/API Key");
+            this.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.WeixinConnect.ClientKeyIdentifier", "App ID");
             this.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.WeixinConnect.ClientKeyIdentifier.Hint",
                 "输入你的 app ID/API key");
             this.AddOrUpdatePluginLocaleResource("Plugins.ExternalAuth.WeixinConnect.ClientSecret", "App Secret");
