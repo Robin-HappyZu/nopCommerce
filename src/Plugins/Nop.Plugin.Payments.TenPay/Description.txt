@@ -1,0 +1,9 @@
+﻿Group: Payment methods
+FriendlyName: TenPay
+SystemName: Payments.TenPay
+Version: 1.0
+SupportedVersions: 3.80
+Author: HappyZu team
+DisplayOrder: 1
+FileName: Nop.Plugin.Payments.TenPay.dll
+Description: This payment module allows you to integrate with TenPay, payment module
