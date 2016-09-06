@@ -1,11 +1,10 @@
 ﻿using System.Web.Routing;
 using Nop.Core.Plugins;
-using Nop.Plugin.ExternalAuth.WeixinConnect;
 using Nop.Services.Authentication.External;
 using Nop.Services.Configuration;
 using Nop.Services.Localization;
 
-namespace Nop.Plugin.ExternalAuth.WeiXin
+namespace Nop.Plugin.ExternalAuth.WeixinConnect
 {
     /// <summary>
     ///     Weixin externalAuth processor
