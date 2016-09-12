@@ -1,0 +1,9 @@
+﻿Group: HappyZu
+FriendlyName: AjaxCart
+SystemName: HappyZu.AjaxCart
+Version: 1.0
+SupportedVersions: 3.80
+Author: HappyZu
+DisplayOrder: 1
+FileName: Nop.Plugin.Order.AjaxCart.dll
+Description: 

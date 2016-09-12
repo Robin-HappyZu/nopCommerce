@@ -138,7 +138,7 @@ namespace Nop.Plugin.Order.AjaxCart.Controller
 
         #endregion
 
-
+         
         public ActionResult PublicInfo(string widgetZone,object additionalData=null)
         {
             return View();
