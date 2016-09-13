@@ -1,1 +1,49 @@
-﻿<!--Pavilion 指令--> 
+﻿@using Nop.Core
+@using Nop.Core.Infrastructure
+@using Nop.Web.Framework.Themes
+<!--Pavilion 指令-->
+@{
+    var themeContext = EngineContext.Current.Resolve<IThemeContext>();
+
+    Html.AddCssFileParts("~/Plugins/Order.AjaxCart/Themes/" + themeContext.WorkingThemeName + "/Content/jquery.bootstrap-touchspin.min.css");
+    Html.AddCssFileParts("~/Plugins/Order.AjaxCart/Themes/" + themeContext.WorkingThemeName + "/Content/ajaxCart.css");
+    Html.AddScriptParts("~/Plugins/Order.AjaxCart/Themes/" + themeContext.WorkingThemeName + "/Content/jquery.bootstrap-touchspin.min.js");
+
+}
+
+<script>
+    var interval = 0;
+    $('.update-cart-button').hide();
+    $(function() {
+        var spin = $('.quantity .qty-input').TouchSpin();
+        spin.on("touchspin.on.startspin", function() {
+            if (interval > 0) {
+                clearInterval(interval);
+            }
+        });
+
+        spin.on("touchspin.on.stopspin", function() {
+            interval = setInterval("UpdateCart()", 500);
+        });
+
+    });
+
+    function UpdateCart() {
+
+        var $form = $('#shopping-cart-form');
+        var url = $form.attr("action");
+        var loadTotal = '@Url.Action("LoadCart", "AjaxCart")';
+        var params = $form.serializeArray();
+        params.push({ name: "updatecart", value: "更新购物车" });
+        $.post(url, params, function(data) {
+            $.getJSON(loadTotal, function(jsonData) {
+                var vm = jsonData;
+                if (jsonData!=null && jsonData.OrderTotals != null) {
+                    $('.order-subtotal .value-summary').text(jsonData.OrderTotals.SubTotal);
+                    $('.tax-value .value-summary').text(jsonData.OrderTotals.Tax);
+                }
+            });
+        });
+        clearInterval(interval);
+    }
+</script>
