@@ -38,9 +38,33 @@
         $.post(url, params, function(data) {
             $.getJSON(loadTotal, function(jsonData) {
                 var vm = jsonData;
-                if (jsonData!=null && jsonData.OrderTotals != null) {
-                    $('.order-subtotal .value-summary').text(jsonData.OrderTotals.SubTotal);
-                    $('.tax-value .value-summary').text(jsonData.OrderTotals.Tax);
+                if (jsonData != null) {
+
+                    if (jsonData.OrderTotals != null) {
+                        if (jsonData.OrderTotals.SubTotal != null) {
+                            $('.order-subtotal .value-summary').text(jsonData.OrderTotals.SubTotal);
+                        }
+                        if (jsonData.OrderTotals.Tax != null) {
+                            $('.tax-value .value-summary').text(jsonData.OrderTotals.Tax);
+                        }
+                        if (jsonData.OrderTotals.Shipping != null) {
+                            $('.shipping-cost .value-summary').text(jsonData.OrderTotals.Shipping);
+                        }
+                        if (jsonData.OrderTotals.OrderTotal != null) {
+                            $('.order-total .value-summary').text(jsonData.OrderTotals.OrderTotal);
+                        }
+                        if (jsonData.OrderTotals.WillEarnRewardPoints != null) {
+                            $('.earn-reward-points .value-summary').text(jsonData.OrderTotals.WillEarnRewardPoints);
+                        }
+                    }
+
+                    if (jsonData.Items != null && jsonData.Items.length>0) {
+                        for (var i = 0; i < jsonData.Items.length; i++) {
+                            var item = jsonData.Items[i];
+                            var row = $('input[name="itemquantity' + item.Id+'"]').parent().parent().parent();
+                            row.find('.product-subtotal').text(item.SubTotal);
+                        }
+                    }
                 }
             });
         });
