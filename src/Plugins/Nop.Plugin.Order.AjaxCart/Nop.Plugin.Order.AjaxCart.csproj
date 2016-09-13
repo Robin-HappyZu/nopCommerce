@@ -75,6 +75,7 @@
     <Compile Include="Models\AjaxCartModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RouteProvider.cs" />
+    <Compile Include="ViewEngines\OrderAjaxCartViewEngine.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Description.txt">
@@ -123,6 +124,10 @@
     <Content Include="Views\AjaxCart\Configure.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Themes\DefaultClean\Views\AjaxCart\PublicInfo.cshtml" />
+    <None Include="Themes\DefaultClean\Views\Web.config" />
+    <None Include="Themes\Pavilion\Views\AjaxCart\PublicInfo.cshtml" />
+    <None Include="Themes\Pavilion\Views\Web.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
