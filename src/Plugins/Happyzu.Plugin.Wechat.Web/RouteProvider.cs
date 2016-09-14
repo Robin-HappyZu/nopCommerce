@@ -1,4 +1,5 @@
-﻿using System.Web.Mvc;
+﻿using System;
+using System.Web.Mvc;
 using System.Web.Routing;
 using Happyzu.Plugin.Wechat.Web.ViewEngines;
 using Nop.Web.Framework.Mvc.Routes;
@@ -13,11 +14,11 @@ namespace Happyzu.Plugin.Wechat.Web
 
             routes.MapRoute("Happyzu.Wechat.Web.Home",
                  "Wechat",
-                 new { controller = "WechatWebHome", action = "Index" },
+                 new { controller = "Home", action = "Index" },
                  new[] { "Happyzu.Plugin.Wechat.Web.Controllers" }
             );
         }
 
-        public int Priority => 5;
+        public int Priority => Int32.MaxValue;
     }
 }

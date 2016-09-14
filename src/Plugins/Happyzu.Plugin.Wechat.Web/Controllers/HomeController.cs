@@ -7,7 +7,7 @@ namespace Happyzu.Plugin.Wechat.Web.Controllers
     {
         public ActionResult Index()
         {
-            return View("~/Plugins/Happyzu.Plugin.Wechat.Web/Views/Home/Index.cshtml");
+            return View();
         }
 
         //public ActionResult Configure()

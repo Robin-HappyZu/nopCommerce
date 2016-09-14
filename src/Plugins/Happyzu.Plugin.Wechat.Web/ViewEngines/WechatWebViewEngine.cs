@@ -18,13 +18,35 @@ namespace Happyzu.Plugin.Wechat.Web.ViewEngines
             {
                 "~/Themes/" + themeContext.WorkingThemeName + "/Views/Plugins/Happyzu.Plugin.Wechat.Web/{1}/{0}.cshtml",
                 "~/Plugins/Happyzu.Plugin.Wechat.Web/Themes/" + themeContext.WorkingThemeName + "/Views/{1}/{0}.cshtml",
-                "~/Plugins/Happyzu.Plugin.Wechat.Web/Views/{1}/{0}.cshtml"
+                "~/Plugins/Happyzu.Plugin.Wechat.Web/Views/{1}/{0}.cshtml",
+                "~/Themes/" + themeContext.WorkingThemeName + "/Views/Plugins/Happyzu.Plugin.Wechat.Web/Shared/{0}.cshtml",
+                "~/Plugins/Happyzu.Plugin.Wechat.Web/Themes/" + themeContext.WorkingThemeName + "/Views/Shared/{0}.cshtml",
+                "~/Plugins/Happyzu.Plugin.Wechat.Web/Views/Shared/{0}.cshtml",
+                "~/Views/{1}/{0}.cshtml",
+                "~/Views/Shared/{0}.cshtml"
             };
             ViewLocationFormats = new[]
             {
                 "~/Themes/" + themeContext.WorkingThemeName + "/Views/Plugins/Happyzu.Plugin.Wechat.Web/{1}/{0}.cshtml",
                 "~/Plugins/Happyzu.Plugin.Wechat.Web/Themes/" + themeContext.WorkingThemeName + "/Views/{1}/{0}.cshtml",
-                "~/Plugins/Happyzu.Plugin.Wechat.Web/Views/{1}/{0}.cshtml"
+                "~/Plugins/Happyzu.Plugin.Wechat.Web/Views/{1}/{0}.cshtml",
+                "~/Themes/" + themeContext.WorkingThemeName + "/Views/Plugins/Happyzu.Plugin.Wechat.Web/Shared/{0}.cshtml",
+                "~/Plugins/Happyzu.Plugin.Wechat.Web/Themes/" + themeContext.WorkingThemeName + "/Views/Shared/{0}.cshtml",
+                "~/Plugins/Happyzu.Plugin.Wechat.Web/Views/Shared/{0}.cshtml",
+                "~/Views/{1}/{0}.cshtml",
+                "~/Views/Shared/{0}.cshtml"
+            };
+
+            MasterLocationFormats = new[]
+            {
+                "~/Themes/" + themeContext.WorkingThemeName + "/Views/Plugins/Happyzu.Plugin.Wechat.Web/{1}/{0}.cshtml",
+                "~/Plugins/Happyzu.Plugin.Wechat.Web/Themes/" + themeContext.WorkingThemeName + "/Views/{1}/{0}.cshtml",
+                "~/Plugins/Happyzu.Plugin.Wechat.Web/Views/{1}/{0}.cshtml",
+                "~/Themes/" + themeContext.WorkingThemeName + "/Views/Plugins/Happyzu.Plugin.Wechat.Web/Shared/{0}.cshtml",
+                "~/Plugins/Happyzu.Plugin.Wechat.Web/Themes/" + themeContext.WorkingThemeName + "/Views/Shared/{0}.cshtml",
+                "~/Plugins/Happyzu.Plugin.Wechat.Web/Views/Shared/{0}.cshtml",
+                "~/Views/{1}/{0}.cshtml",
+                "~/Views/Shared/{0}.cshtml"
             };
         }
     }
