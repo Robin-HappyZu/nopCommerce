@@ -13,7 +13,7 @@ namespace Happyzu.Plugin.Wechat.Web
 
             routes.MapRoute("Happyzu.Wechat.Web.Home",
                  "Wechat",
-                 new { controller = "WechatWebHome", action = "Index" },
+                 new { controller = "Home", action = "Index" },
                  new[] { "Happyzu.Plugin.Wechat.Web.Controllers" }
             );
         }
