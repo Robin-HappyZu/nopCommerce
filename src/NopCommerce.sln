@@ -81,7 +81,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nop.Plugin.ExchangeRate.Ecb
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nop.Plugin.Pickup.PickupInStore", "Plugins\Nop.Plugin.Pickup.PickupInStore\Nop.Plugin.Pickup.PickupInStore.csproj", "{06C88D0B-A276-4D3D-8BE5-7C58BF3072E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Happyzu.Plugin.Wechat.Web", "Presentation\Nop.Web\Plugins\Happyzu.Plugin.Wechat.Web\Happyzu.Plugin.Wechat.Web.csproj", "{8C48B2E1-B11F-403A-98B4-F639A5A37705}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Happyzu.Plugin.Widgets.WechatWeb", "Plugins\Happyzu.Plugin.Widgets.WechatWeb\Happyzu.Plugin.Widgets.WechatWeb.csproj", "{8C48B2E1-B11F-403A-98B4-F639A5A37705}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
