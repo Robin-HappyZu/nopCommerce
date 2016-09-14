@@ -30,10 +30,6 @@
                 <table class="cart">
                     <colgroup>
                         <col width="1" />
-                        @if (Model.IsEditable)
-                        {
-                            <col width="1" />
-                        }
                         @if (Model.ShowSku)
                         {
                             <col width="1" />
@@ -46,18 +42,16 @@
                         <col width="1" />
                         <col width="1" />
                         <col width="1" />
+                        @if (Model.IsEditable)
+                        {
+                            <col width="1" />
+                        }
                     </colgroup>
                     <thead>
                         <tr class="cart-header-row">
                             <th>
 			                    <span class="item-count">#</span>
 			                </th>
-                            @if (Model.IsEditable)
-                            {
-                            <th class="remove-from-cart" data-hide="w410, w480, w580">
-                                @T("ShoppingCart.Remove")
-                            </th>
-                            }
                                 @if (Model.ShowSku)
                             {
                                 <th class="sku" data-hide="w410, w480, w580, w768, w980">
@@ -82,6 +76,12 @@
                             <th class="subtotal">
                                 @T("ShoppingCart.ItemTotal")
                             </th>
+                            @if (Model.IsEditable)
+                            {
+                                <th class="remove-from-cart" data-hide="w410, w480, w580">
+                                    @T("ShoppingCart.Remove")
+                                </th>
+                            }
                         </tr>
                     </thead>
                     <tbody>
@@ -93,12 +93,6 @@
                                 <td>
 		                            <span class="item-count">@counter</span>
 		                        </td>
-                                @if (Model.IsEditable)
-                                {
-                                    <td class="remove-from-cart">
-                                        <input type="checkbox" name="removefromcart" value="@(item.Id)" />
-                                    </td>
-                                }
                                 @if (Model.ShowSku)
                                 {
                                     <td class="sku">
@@ -185,6 +179,12 @@
                                         </div>
                                     }
                                 </td>
+                                @if (Model.IsEditable)
+                                {
+                                    <td class="remove-from-cart">
+                                        <a href="javascript:;" class="removefromcart" data-value="@(item.Id)">X</a>
+                                    </td>
+                                }
                             </tr>
                         }
                     </tbody>
@@ -287,12 +287,12 @@
 		                                </a>
 		                            </span>
 									<script>
-									   $(document).ready(function() {
-									       $('#read-terms').on('click', function(e) {
-									           e.preventDefault();
-									           displayPopupContentFromUrl('@Url.RouteUrl("TopicPopup", new {SystemName = "conditionsofuse"})', '@T("Checkout.TermsOfService")');
-									       });
-									   });
+									    $(document).ready(function() {
+									        $('#read-terms').on('click', function(e) {
+									            e.preventDefault();
+									            displayPopupContentFromUrl('@Url.RouteUrl("TopicPopup", new {SystemName = "conditionsofuse"})', '@T("Checkout.TermsOfService")');
+									        });
+									    });
 									</script>
                                 </div>
                             </div>
@@ -351,3 +351,15 @@
     }
     @Html.Widget("order_summary_content_after")
 </div>
+<script>
+    $(function() {
+        var $tb = $('.remove-from-cart');
+        $tb.find('a.removefromcart').click(function() {
+            var id = $(this).attr("data-value");
+            var $row = $(this).parent().parent();
+            $row.find('input[name="itemquantity' + id + '"],select[name="itemquantity' + id + '"]').val(0);
+            $row.hide();
+            $('.update-cart-button').click();
+        });
+    });
+</script>
