@@ -1,6 +1,6 @@
 ﻿Group: Wechat
 FriendlyName: 微信公众平台
-SystemName: WechatWeb
+SystemName: Wechat.Web
 Version: 1.0
 SupportedVersions: 3.80
 Author: Happy Zu
