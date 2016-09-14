@@ -166,3 +166,4 @@ src/Presentation/Nop.Web/Administration/db_backups/*.bak
 /src/Presentation/Nop.Web/Themes/Pavilion
 src/Presentation/Nop.Web/Administration/db_backups/*.bak
 src/packages
+/src/Presentation/Nop.Web/Plugins
